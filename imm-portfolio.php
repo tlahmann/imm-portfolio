@@ -5,22 +5,31 @@
 /*
 Plugin Name: imm Portfolio
 Description: Portfolio-Plugin für die imm Website.
-Version: 0.0.12
+Version: 0.0.13
 Author: Tobias Lahmann
 Author URI: https://github.com/tlahmann
 License: GPLv2 or later
+Last Modifications: 
+    add comments and documentation
 */
 
+// Store the current plugin path in a global variable
 define( 'IMM__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 // Call an instance from our class
 $plugin_start = new imm_portfolio();
 
+/**
+ * The class imm_portfolio provides two new post types for the WP backbone. These 
+ * store subjects taught at ulm university and projects conducted within these 
+ * teaching periods. Each post type has a taxonomy associated to define further
+ * categories and keywords
+ */
 class imm_portfolio
 {
 
     /*
-     * Constructor - the brain of our class
+     * Constructor called when wp launches the plugin
      */
     public function __construct()
     {
