@@ -16,12 +16,18 @@ Last Modifications:
 // Store the current plugin path in a global variable
 define( 'IMM__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
+/**
+ * ==================================================
+ * Load the functions associated with this plugin.
+ * ==================================================
+ */
 require_once( IMM__PLUGIN_DIR . 'functions.php' );
 
-// Call an instance from our class
+// Call an instance from the subject class
 require_once( IMM__PLUGIN_DIR . 'Subject.class.php' );
 new Subject();
 
+// Call an instance from the project class
 require_once( IMM__PLUGIN_DIR . 'Project.class.php' );
 new Project();
 
