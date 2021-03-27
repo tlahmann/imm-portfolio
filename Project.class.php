@@ -189,9 +189,9 @@ class Project
      *
      * @param \WP_Post     $post       The current CPT \Project post
      *
-     * @return string                  The HTML DOM of all available choices
+     * @return void
      */
-    public function draw_project_subjects_box(\WP_Post $post): string
+    public function draw_project_subjects_box(\WP_Post $post): void
     {
         // All available posts of type 'subject' @see \Subject.class.php
         $all_subjects = get_all_of_post_type('subject');

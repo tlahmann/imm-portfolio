@@ -21,11 +21,15 @@ class Subject
      */
     public function __construct()
     {
-        add_action('init', array( $this, 'register_subjects_taxonomy' ));
         add_action('init', array( $this, 'register_subjects_post_type' ));
     }
 
-    public function register_subjects_post_type()
+    /**
+     * Create and register a custom post type (CPT) with the wordpress backend
+     *
+     * @return void
+     */
+    public function register_subjects_post_type(): void
     {
         // args for the new post_type
         $args = array(
@@ -124,23 +128,5 @@ class Subject
 
         // Custom Post Type registrieren
         register_post_type('subject', $args);
-    }
-
-    //The following snippet is used to enable categories for the subjects CPT.
-    public function register_subjects_taxonomy()
-    {
-        register_taxonomy(
-            'subject_categories',  // The name of the taxonomy. Name should be in slug form (no spaces and all lowercase. no caps).
-            'subjects',            // This taxonomy can be applied to the custom post type 'subjects' 
-            array(
-                'hierarchical' => false,
-                'label' => 'Keywords',  //Label Displayed in the Admin when creating a new subject
-                'query_var' => true,
-                'rewrite' => array(
-                    'slug' => 'subjects', // This controls the base slug that will display before each term
-                    'with_front' => false // Don't display the category base before
-                ),
-            )
-        );
     }
 }
