@@ -43,7 +43,7 @@ class Subject
             'show_in_menu'        => true,
             /* (int) The position in the menu order the post type should appear. To work, $show_in_menu must be true. 
             Default null (at the bottom). */
-            'menu_position'       => 20,
+            'menu_position'       => 21,
             // (bool) Makes this post type available via the admin bar. Default is value of $show_in_menu.
             'show_in_admin_bar'   => true,
             // (bool) Makes this post type available for selection in navigation menus. Default is value of $public.
@@ -123,7 +123,7 @@ class Subject
         );
 
         // Custom Post Type registrieren
-        register_post_type('imm_subject', $args);
+        register_post_type('subject', $args);
     }
 
     //The following snippet is used to enable categories for the subjects CPT.

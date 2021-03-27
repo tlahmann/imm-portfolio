@@ -1,6 +1,6 @@
 <?php
 /**
- * ManyToMany linker class
+ * Custom post type Project class
  *
  * @package WordPress
  * @subpackage imm
@@ -15,6 +15,7 @@
  */
 class Project
 {
+    private $_already_saved = false;  # Used to avoid saving twice
 
     /*
      * Constructor called when wp launches the plugin
@@ -23,45 +24,52 @@ class Project
     {
         add_action('init', array( $this, 'register_projects_taxonomy' ));
         add_action('init', array( $this, 'register_projects_post_type' ));
+        add_action('save_post', array( $this, 'save_meta_box_data' ), 10, 2);
+        add_action('add_meta_boxes_project', array( $this, 'setup_project_boxes' ));
     }
 
-    public function register_projects_post_type()
+    /**
+     * Create and register a custom post type (CPT) with the wordpress backend
+     *
+     * @return void
+     */
+    public function register_projects_post_type(): void
     {
         // args for the new post_type
         $args = array(
-            /* (bool) Whether a post type is intended for use publicly either via the admin interface or by front-end 
-            users. While the default settings of $exclude_from_search, $publicly_queryable, $show_ui, and 
-            $show_in_nav_menus are inherited from public, each does not rely on this relationship and controls a very 
+            /* (bool) Whether a post type is intended for use publicly either via the admin interface or by front-end
+            users. While the default settings of $exclude_from_search, $publicly_queryable, $show_ui, and
+            $show_in_nav_menus are inherited from public, each does not rely on this relationship and controls a very
             specific intention. Default false. */
             'public'              => true,
             // bool) Whether to generate and allow a UI for managing this post type in the admin. Default is value of $public.
             'show_ui'             => true,
-            /* (bool|string) Where to show the post type in the admin menu. To work, $show_ui must be true. If true, the post type 
-            is shown in its own top level menu. If false, no menu is shown. If a string of an existing top level menu (eg. 
-            'tools.php' or 'edit.php?post_type=page'), the post type will be placed as a sub-menu of that. Default is value of 
+            /* (bool|string) Where to show the post type in the admin menu. To work, $show_ui must be true. If true, the post type
+            is shown in its own top level menu. If false, no menu is shown. If a string of an existing top level menu (eg.
+            'tools.php' or 'edit.php?post_type=page'), the post type will be placed as a sub-menu of that. Default is value of
             $show_ui. */
             'show_in_menu'        => true,
-            /* (int) The position in the menu order the post type should appear. To work, $show_in_menu must be true. 
+            /* (int) The position in the menu order the post type should appear. To work, $show_in_menu must be true.
             Default null (at the bottom). */
-            'menu_position'       => 21,
+            'menu_position'       => 22,
             // (bool) Makes this post type available via the admin bar. Default is value of $show_in_menu.
             'show_in_admin_bar'   => true,
             // (bool) Makes this post type available for selection in navigation menus. Default is value of $public.
             'show_in_nav_menus'   => false,
              
-            /* (string) The string to use to build the read, edit, and delete capabilities. May be passed as an array to allow for 
-            alternative plurals when using this argument as a base to construct the capabilities, e.g. array('story', 'stories'). 
+            /* (string) The string to use to build the read, edit, and delete capabilities. May be passed as an array to allow for
+            alternative plurals when using this argument as a base to construct the capabilities, e.g. array('story', 'stories').
             Default 'post'. */
             'capability_type'     => 'post',
  
-            /* (bool) Whether queries can be performed on the front end for the post type as part of parse_request(). 
+            /* (bool) Whether queries can be performed on the front end for the post type as part of parse_request().
             Endpoints would include:
                 ?post_type={post_type_key}
                 ?{post_type_key}={single_post_slug}
                 ?{post_type_query_var}={single_post_slug} If not set, the default is inherited from $public. */
             'publicly_queryable'  => true,
  
-            /* (bool) Whether to exclude posts with this post type from front end search results. Default is the opposite 
+            /* (bool) Whether to exclude posts with this post type from front end search results. Default is the opposite
             value of $public. */
             'exclude_from_search' => false,
  
@@ -72,7 +80,7 @@ class Project
             count will show on the edit screen. A feature can also be specified as an array of arguments to provide
             additional information about supporting that feature. Example: array( 'my_feature', array( 'field' => 'value' ) ).
             Default is an array containing 'title' and 'editor'. */
-            'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'revisions' ),
+            'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
 
             /* (bool|string) Whether there should be post type archives, or if a string, the archive slug to use.
             Will generate the proper rewrite rules if $rewrite is enabled. Default false. */
@@ -88,13 +96,13 @@ class Project
             Taxonomies can be registered later with register_taxonomy() or register_taxonomy_for_object_type(). */
             'taxonomies' => array('project_categories'),
              
-            /* (bool|array) Triggers the handling of rewrites for this post type. To prevent rewrite, set to false. Defaults to 
-            true, using $post_type as slug. To specify rewrite rules, an array can be passed with any of these keys: 
+            /* (bool|array) Triggers the handling of rewrites for this post type. To prevent rewrite, set to false. Defaults to
+            true, using $post_type as slug. To specify rewrite rules, an array can be passed with any of these keys:
                 'slug' (string) Customize the permastruct slug. Defaults to $post_type key.
                 'with_front' (bool) Whether the permastruct should be prepended with WP_Rewrite::$front. Default true.
                 'feeds' (bool) Whether the feed permastruct should be built for this post type. Default is value of $has_archive.
                 'pages' (bool) Whether the permastruct should provide for pagination. Default true.
-                'ep_mask' (int) Endpoint mask to assign. If not specified and permalink_epmask is set, inherits from $permalink_epmask. 
+                'ep_mask' (int) Endpoint mask to assign. If not specified and permalink_epmask is set, inherits from $permalink_epmask.
                     If not specified and permalink_epmask is not set, defaults to EP_PERMALINK.
             */
             'rewrite'             => array('slug' => 'projects' ),
@@ -103,7 +111,7 @@ class Project
             // Find the appropriate dashicon here: https://developer.wordpress.org/resource/dashicons/
             'menu_icon' => 'dashicons-media-document',
         
-            /* (string[]) An array of labels for this post type. If not set, post labels are inherited for non-hierarchical 
+            /* (string[]) An array of labels for this post type. If not set, post labels are inherited for non-hierarchical
             types and page labels for hierarchical ones. See get_post_type_labels() for a full list of supported labels. */
             'labels'              => array(
                 'name'               => _x('Projekt', 'post type general name'),
@@ -123,24 +131,221 @@ class Project
         );
 
         // Custom Post Type registrieren
-        register_post_type('imm_project', $args);
+        register_post_type('project', $args);
     }
 
-    //The following snippet is used to enable categories for the projects CPT.
+    /**
+     * Enable categories for the \Project CPT
+     *
+     * @return void
+     */
     public function register_projects_taxonomy()
     {
         register_taxonomy(
-            'project_categories',  //The name of the taxonomy. Name should be in slug form (no spaces and all lowercase. no caps).
-            'projects',        //post type name
+            'project_categories',           // The name of the taxonomy. Name should be in slug form (no spaces and all lowercase. no caps).
+            'projects',                     // post type name
             array(
-                'hierarchical' => true,
-                'label' => 'Keywords',  //Label Displayed in the Admin when creating a new project
+                'hierarchical' => true,     // The keywords are hierarchical at the moment
+                'label' => 'Schlagworte',   // Label Displayed in the Admin when creating a new project
                 'query_var' => true,
                 'rewrite' => array(
-                    'slug' => 'projects', // This controls the base slug that will display before each term
-                    'with_front' => false // Don't display the category base before
+                    'slug' => 'projects',   // This controls the base slug that will display before each term
+                    'with_front' => false   // Don't display the category base before
                 )
             )
         );
+    }
+
+    /**
+     * Set up all project related meta-boxes in the wordpress editor
+     *
+     * @param \WP_Post     $post       The current custom post type 'project' post
+     *
+     * @return void
+     */
+    public function setup_project_boxes(\WP_Post $post): void
+    {
+        add_meta_box(
+            'imm_project_related_subject_box',
+            __('Related Subject', 'language'),
+            array( $this, 'draw_project_subjects_box' ),
+            $post->post_type,
+            'side',
+            'default'
+        );
+    
+        // add_meta_box(
+        //     'imm_project_related_subject_box',
+        //     __('Time period', 'language'),
+        //     array( $this, 'draw_project_period_box' ),
+        //     $post->post_type,
+        //     'normal',
+        //     'high'
+        // );
+    }
+
+    /**
+     * Draw the select DOM element for wordpress to show in the meta box
+     *
+     * @param \WP_Post     $post       The current CPT \Project post
+     *
+     * @return string                  The HTML DOM of all available choices
+     */
+    public function draw_project_subjects_box(\WP_Post $post): string
+    {
+        // All available posts of type 'subject' @see \Subject.class.php
+        $all_subjects = get_all_of_post_type('subject');
+
+        // Get the linked subject for this project post
+        $linked_subject_id = $this->get_project_subject_id($post->ID);
+
+        // Build dropdown select box in the WP meta box
+        $checked = $linked_subject_id == "0" ? ' selected="selected"' : '';
+        $choice_block = <<<HTML
+                        <label for="subjects">Zugeordnetes Fach:</label><br/>
+                        <select name="subjects" id="subjects" style="width: 100%;">
+                            <option value="null" {$checked}>Kein Fach</option>
+                        HTML;
+        if (0 == count($all_subjects)) {
+            // noop
+        } else {
+            $choices = array();
+            foreach ($all_subjects as $subject) {
+                $checked = $subject->ID == $linked_subject_id ? ' selected="selected"' : '';
+
+                // Add all available subjects to the select DOM element
+                $display_name = esc_attr($subject->post_title);
+                $choices[] = <<<HTML
+                             <option value="{$subject->ID}" {$checked}>{$display_name}</option>
+                             HTML;
+            }
+            $choice_block .= implode("\r\n", $choices);
+        }
+
+        // Close select section
+        $choice_block .= <<<HTML
+                         </select>
+                         HTML;
+
+        # Make sure the user intended to do this.
+        wp_nonce_field(
+            "updating_{$post->post_type}_meta_fields",
+            $post->post_type . '_meta_nonce'
+        );
+
+        echo '<div>' . $choice_block . '</div>';
+    }
+
+    /**
+     * Grab the subject ID associated with this project
+     *
+     * @param   number      $project_id     The current CPT \Project post id
+     *
+     * @return  string                      The assigned CPT \Subject post id
+     */
+    private function get_project_subject_id($project_id = 0): string
+    {
+        $ids = "0";
+        if ($project_id > 0) {
+            $matches = get_post_meta($project_id, '_subject_id', false);
+            if (count($matches) > 0) {
+                $ids = $matches[0];
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Handle metabox data save when the CPT is saved by wordpress
+     *
+     * @param   number      $project_id     The current CPT \Project post id
+     * @param   \WP_Post    $post           The current \WP_Post post to be saved
+     *
+     * @return  void
+     */
+    public function save_meta_box_data($project_id = 0, \WP_Post $post = null): void
+    {
+        $do_save = true;
+
+        # Do not save if we have already saved our updates
+        if ($this->_already_saved) {
+            $do_save = false;
+        }
+
+        # Do not save if there is no post id or post
+        if (empty($project_id) || empty($post)) {
+            $do_save = false;
+        } elseif ($post->post_type !== 'project') {
+            $do_save = false;
+        }
+
+        # Do not save for revisions or autosaves
+        if (
+            defined('DOING_AUTOSAVE')
+            && (
+                is_int(wp_is_post_revision($post))
+                || is_int(wp_is_post_autosave($post))
+            )
+        ) {
+            $do_save = false;
+        }
+
+        # Make sure proper post is being worked on
+        if (!array_key_exists('post_ID', $_POST) || $project_id != $_POST['post_ID']) {
+            $do_save = false;
+        }
+
+        # Make sure we have the needed permissions to save [ assumes both types use edit_post ]
+        if (! current_user_can('edit_post', $project_id)) {
+            $do_save = false;
+        }
+
+        # Make sure the nonce and referrer check out.
+        $nonce_field_name = $post->post_type . '_meta_nonce';
+        if (! array_key_exists($nonce_field_name, $_POST)) {
+            $do_save = false;
+        } elseif (! wp_verify_nonce($_POST["{$nonce_field_name}"], "updating_{$post->post_type}_meta_fields")) {
+            $do_save = false;
+        } elseif (! check_admin_referer("updating_{$post->post_type}_meta_fields", $nonce_field_name)) {
+            $do_save = false;
+        }
+
+        // Only act if the post should be saved
+        if ($do_save) {
+            $this->handle_project_meta_changes($project_id, $_POST);
+
+            # Note that we saved our data
+            $this->_already_saved = true;
+        }
+        return;
+    }
+
+    /**
+     * Add or remove the link between a \Project and a \Subject
+     *
+     * @param   number      $project_id     The current CPT \Project post id
+     * @param   array       $post           The updated data
+     *
+     * @return  void
+     */
+    private function handle_project_meta_changes($project_id = 0, $data = array())
+    {
+        # Get the currently linked subjects for this project
+        $linked_subject_id = $this->get_project_subject_id($project_id);
+
+        # Get the list of subjects checked by the user
+        if (array_key_exists('subject_id', $data) && $data['subject_id'] !== 0) {
+            $subject_id = $data['subject_id'];
+        } else {
+            $subject_id = 0;
+        }
+
+        if ($subject_id !== 0) {
+            # We use add post meta with 4th parameter true to let us link
+            # to one unique subject.
+            update_post_meta($project_id, '_subject_id', $subject_id);
+        } else {
+            delete_post_meta($project_id, '_subject_id');
+        }
     }
 }
