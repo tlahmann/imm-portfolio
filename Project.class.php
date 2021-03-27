@@ -22,7 +22,7 @@ class Project
      */
     public function __construct()
     {
-        add_action('init', array( $this, 'register_projects_taxonomy' ));
+        add_action('init', array( $this, 'register_projects_categories' ));
         add_action('init', array( $this, 'register_projects_post_type' ));
         add_action('save_post', array( $this, 'save_meta_box_data' ), 10, 2);
         add_action('add_meta_boxes_project', array( $this, 'setup_project_boxes' ));
@@ -139,13 +139,13 @@ class Project
      *
      * @return void
      */
-    public function register_projects_taxonomy()
+    public function register_projects_categories()
     {
         register_taxonomy(
             'project_categories',           // The name of the taxonomy. Name should be in slug form (no spaces and all lowercase. no caps).
             'projects',                     // post type name
             array(
-                'hierarchical' => true,     // The keywords are hierarchical at the moment
+                'hierarchical' => false,     // The keywords are hierarchical at the moment
                 'label' => 'Schlagworte',   // Label Displayed in the Admin when creating a new project
                 'query_var' => true,
                 'rewrite' => array(
