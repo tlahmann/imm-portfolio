@@ -1,6 +1,6 @@
 # imm-portfolio WordPress Plugin
 
-The imm-portfolio plugin is a custom plugin to add subjects (ger. Fach) and projekts (ger. Projekt) to the imm WordPress website for easy maintenance and additions.
+The imm-portfolio plugin is a custom WordPress plugin to add subjects (ger. Fach) and projekts (ger. Projekt) to the imm WordPress website for easy maintenance.
 
 ## How to Install
 
@@ -14,7 +14,9 @@ Then, from your WordPress administration panel, go to Plugins > Add New and clic
 
 Clone the GitHub repository:  
 
-`git clone https://github.com/poetapp/wordpress-plugin.git`
+`git clone git@github.com:tlahmann/imm-portfolio.git`
+or 
+`git clone https://github.com/tlahmann/imm-portfolio.git`
 
 Copy the contents into the WordPress `plugin/imm-portfolio` directory
 
