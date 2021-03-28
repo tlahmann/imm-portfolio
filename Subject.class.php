@@ -1,17 +1,12 @@
 <?php
 /**
- * ManyToMany linker class
+ * Custom post type Subject class
+ * The class Subject provides a new post type for the WP backbone. It stores 
+ * subjects taught at ulm university.
  *
  * @package WordPress
  * @subpackage imm
  * @since imm 0.0.14
- */
-
- /**
- * The class imm_portfolio provides two new post types for the WP backbone. These 
- * store subjects taught at ulm university and projects conducted within these 
- * teaching periods. Each post type has a taxonomy associated to define further
- * categories and keywords
  */
 class Subject
 {

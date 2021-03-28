@@ -1,17 +1,12 @@
 <?php
 /**
  * Custom post type Project class
+ * The class Project provides a new post type for the WP backbone. It stores 
+ * projects conducted within certain courses in each teaching period.
  *
  * @package WordPress
  * @subpackage imm
  * @since imm 0.0.14
- */
-
- /**
- * The class imm_portfolio provides two new post types for the WP backbone. These
- * store subjects taught at ulm university and projects conducted within these
- * teaching periods. Each post type has a taxonomy associated to define further
- * categories and keywords
  */
 class Project
 {

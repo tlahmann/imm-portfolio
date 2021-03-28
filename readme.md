@@ -8,7 +8,7 @@ The imm-portfolio plugin is a custom WordPress plugin to add subjects (ger. Fach
 
 Download the repository as compressed zip archive.
 
-Then, from your WordPress administration panel, go to Plugins > Add New and click the Upload Plugin button at the top of the page.
+Then, from your WordPress administration panel, go to `Plugins > Add New` and click the `Upload Plugin` button at the top of the page.
 
 ### From source
 
