@@ -168,19 +168,19 @@ class Project
             'side',
             'default'
         );
-    
-        // add_meta_box(
-        //     'imm_project_related_subject_box',
-        //     __('Time period', 'language'),
-        //     array( $this, 'draw_project_period_box' ),
-        //     $post->post_type,
-        //     'normal',
-        //     'high'
-        // );
+        
+        add_meta_box(
+            'imm_project_time_period_box',
+            __('Time period', 'language'),
+            array( $this, 'draw_project_period_box' ),
+            $post->post_type,
+            'side',
+            'default'
+        );
     }
 
     /**
-     * Draw the select DOM element for wordpress to show in the meta box
+     * Echoes the subject select DOM element for wordpress to show in the meta box
      *
      * @param \WP_Post     $post       The current CPT \Project post
      *
@@ -197,8 +197,8 @@ class Project
         // Build dropdown select box in the WP meta box
         $checked = $linked_subject_id == "0" ? ' selected="selected"' : '';
         $choice_block = <<<HTML
-                        <label for="subjects">Zugeordnetes Fach:</label><br/>
-                        <select name="subjects" id="subjects" style="width: 100%;">
+                        <label for="subject_id">Zugeordnetes Fach:</label><br/>
+                        <select name="subject_id" id="subject_id" style="width: 100%;">
                             <option value="null" {$checked}>Kein Fach</option>
                         HTML;
         if (0 == count($all_subjects)) {
@@ -225,7 +225,56 @@ class Project
         # Make sure the user intended to do this.
         wp_nonce_field(
             "updating_{$post->post_type}_meta_fields",
-            $post->post_type . '_meta_nonce'
+            $post->post_type . '_subject_meta_nonce'
+        );
+
+        echo '<div>' . $choice_block . '</div>';
+    }
+
+    /**
+     * Echoes the term select DOM element for wordpress to show in the meta box
+     *
+     * @param \WP_Post     $post       The current CPT \Project post
+     *
+     * @return void
+     */
+    public function draw_project_period_box(\WP_Post $post): void
+    {
+        // Get the linked subject for this project post
+        $linked_term = $this->get_project_term($post->ID);
+        $current_year = intval(date("Y"));
+
+        // Build dropdown select box in the WP meta box
+        $checked = $linked_term == "0" ? ' selected="selected"' : '';
+        $choice_block = <<<HTML
+                        <label for="term">Projektzeit:</label><br/>
+                        <select name="term" id="term" style="width: 100%;">
+                            <option value="null" {$checked}>Kein Semester</option>
+                        HTML;
+
+        $choices = array();
+        for ($i = $current_year - 2; $i <= $current_year; $i++) {
+            $first_checked = $linked_term == "$i-1" ? ' selected="selected"' : '';
+            $second_checked = $linked_term == "$i-2" ? ' selected="selected"' : '';
+            // Add all available subjects to the select DOM element
+            $first_display_name = "Wintersemester " . ($i-1) . "/" . substr($i, -2);
+            $second_display_name = "Sommersemester " . $i;
+            $choices[] = <<<HTML
+                            <option value="{$i}-1" {$first_checked}>{$first_display_name}</option>
+                            <option value="{$i}-2" {$second_checked}>{$second_display_name}</option>
+                            HTML;
+        }
+        $choice_block .= implode("\r\n", $choices);
+
+        // Close select section
+        $choice_block .= <<<HTML
+                         </select>
+                         HTML;
+
+        # Make sure the user intended to do this.
+        wp_nonce_field(
+            "updating_{$post->post_type}_meta_fields",
+            $post->post_type . '_period_meta_nonce'
         );
 
         echo '<div>' . $choice_block . '</div>';
@@ -243,6 +292,25 @@ class Project
         $ids = "0";
         if ($project_id > 0) {
             $matches = get_post_meta($project_id, '_subject_id', false);
+            if (count($matches) > 0) {
+                $ids = $matches[0];
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Grab the subject ID associated with this project
+     *
+     * @param   number      $project_id     The current CPT \Project post id
+     *
+     * @return  string                      The assigned CPT \Subject post id
+     */
+    private function get_project_term($project_id = 0): string
+    {
+        $ids = "0";
+        if ($project_id > 0) {
+            $matches = get_post_meta($project_id, '_term', false);
             if (count($matches) > 0) {
                 $ids = $matches[0];
             }
@@ -295,14 +363,16 @@ class Project
             $do_save = false;
         }
 
-        # Make sure the nonce and referrer check out.
-        $nonce_field_name = $post->post_type . '_meta_nonce';
-        if (! array_key_exists($nonce_field_name, $_POST)) {
-            $do_save = false;
-        } elseif (! wp_verify_nonce($_POST["{$nonce_field_name}"], "updating_{$post->post_type}_meta_fields")) {
-            $do_save = false;
-        } elseif (! check_admin_referer("updating_{$post->post_type}_meta_fields", $nonce_field_name)) {
-            $do_save = false;
+        foreach (['_subject', '_period'] as $subtype) {
+            # Make sure the nonce and referrer check out.
+            $nonce_field_name = $post->post_type . $subtype . '_meta_nonce';
+            if (! array_key_exists($nonce_field_name, $_POST)) {
+                $do_save = false;
+            } elseif (! wp_verify_nonce($_POST["{$nonce_field_name}"], "updating_{$post->post_type}_meta_fields")) {
+                $do_save = false;
+            } elseif (! check_admin_referer("updating_{$post->post_type}_meta_fields", $nonce_field_name)) {
+                $do_save = false;
+            }
         }
 
         // Only act if the post should be saved
@@ -327,20 +397,31 @@ class Project
     {
         # Get the currently linked subjects for this project
         $linked_subject_id = $this->get_project_subject_id($project_id);
+        $linked_term = $this->get_project_term($project_id);
 
         # Get the list of subjects checked by the user
         if (array_key_exists('subject_id', $data) && $data['subject_id'] !== 0) {
-            $subject_id = $data['subject_id'];
-        } else {
-            $subject_id = 0;
+            $subject_id = $data['subject_id'] ?? 0;
+            
+            if ($subject_id !== 0) {
+                # We use add post meta with 4th parameter true to let us link
+                # to one unique subject.
+                update_post_meta($project_id, '_subject_id', $subject_id);
+            } else {
+                delete_post_meta($project_id, '_subject_id');
+            }
         }
 
-        if ($subject_id !== 0) {
-            # We use add post meta with 4th parameter true to let us link
-            # to one unique subject.
-            update_post_meta($project_id, '_subject_id', $subject_id);
-        } else {
-            delete_post_meta($project_id, '_subject_id');
+        if (array_key_exists('term', $data) && $data['term'] !== 0) {
+            $term = $data['term'] ?? 0;
+            
+            if ($term !== 0) {
+                # We use add post meta with 4th parameter true to let us link
+                # to one unique subject.
+                update_post_meta($project_id, '_term', $term);
+            } else {
+                delete_post_meta($project_id, '_term');
+            }
         }
     }
 }
