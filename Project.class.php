@@ -1,7 +1,7 @@
 <?php
 /**
  * Custom post type Project class
- * The class Project provides a new post type for the WP backbone. It stores 
+ * The class Project provides a new post type for the WP backbone. It stores
  * projects conducted within certain courses in each teaching period.
  *
  * @package WordPress
@@ -170,11 +170,38 @@ class Project
         );
     }
 
-    public function draw_meta_boxes(\WP_Post $post){
+    public function draw_meta_boxes(\WP_Post $post)
+    {
         echo '<div style="display: flex;gap: 5%;">';
+        $this->draw_project_highlight_box($post);
         $this->draw_project_subjects_box($post);
         $this->draw_project_period_box($post);
         echo '</div>';
+    }
+
+    /**
+     * Echoes the subject select DOM element for wordpress to show in the meta box
+     *
+     * @param \WP_Post     $post       The current CPT \Project post
+     *
+     * @return void
+     */
+    private function draw_project_highlight_box(\WP_Post $post): void
+    {
+        // Build dropdown select box in the WP meta box
+        $checked = get_post_meta($post->ID, '_highlight', true) == "is-highlight" ? ' checked="checked"' : '';
+        $choice_block = <<<HTML
+                        <label for="highlight">Projekt in den Highlights zeigen</label><br>
+                        <input type="checkbox" id="highlight" name="highlight" value="is-highlight" {$checked}>
+                        HTML;
+
+        # Make sure the user intended to do this.
+        wp_nonce_field(
+            "updating_{$post->post_type}_meta_fields",
+            $post->post_type . '_highlight_meta_nonce'
+        );
+
+        echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
     }
 
     /**
@@ -396,6 +423,23 @@ class Project
         # Get the currently linked subjects for this project
         $linked_subject_id = $this->get_project_subject_id($project_id);
         $linked_term = $this->get_project_term($project_id);
+
+        if (array_key_exists('highlight', $data)) {
+            /* Get the meta value of the custom field key. */
+            $meta_value = get_post_meta($project_id, '_highlight', true);
+            $new_meta_value = $data['highlight'] ?? 0;
+            
+            if ($new_meta_value && '' == $meta_value) {
+                /* We use add_post_meta with 4th parameter 'true' to have unique values. */
+                add_post_meta($project_id, '_highlight', $new_meta_value, true);
+            } elseif ($new_meta_value && $new_meta_value != $meta_value) {
+                /* If the new meta value does not match the old value, update it. */
+                update_post_meta($project_id, '_highlight', $new_meta_value);
+            } elseif ('' == $new_meta_value && $meta_value) {
+                /* If there is no new meta value but an old value exists, delete it. */
+                delete_post_meta($project_id, '_highlight', $meta_value);
+            }
+        }
 
         # Get the list of subjects checked by the user
         if (array_key_exists('subject_id', $data) && $data['subject_id'] !== 0) {
