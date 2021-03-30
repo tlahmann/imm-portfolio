@@ -163,20 +163,18 @@ class Project
         add_meta_box(
             'imm_project_related_subject_box',
             __('Related Subject', 'language'),
-            array( $this, 'draw_project_subjects_box' ),
+            array( $this, 'draw_meta_boxes' ),
             $post->post_type,
-            'side',
+            'normal',
             'default'
         );
-        
-        add_meta_box(
-            'imm_project_time_period_box',
-            __('Time period', 'language'),
-            array( $this, 'draw_project_period_box' ),
-            $post->post_type,
-            'side',
-            'default'
-        );
+    }
+
+    public function draw_meta_boxes(\WP_Post $post){
+        echo '<div style="display: flex;gap: 5%;">';
+        $this->draw_project_subjects_box($post);
+        $this->draw_project_period_box($post);
+        echo '</div>';
     }
 
     /**
@@ -186,7 +184,7 @@ class Project
      *
      * @return void
      */
-    public function draw_project_subjects_box(\WP_Post $post): void
+    private function draw_project_subjects_box(\WP_Post $post): void
     {
         // All available posts of type 'subject' @see \Subject.class.php
         $all_subjects = get_all_of_post_type('subject');
@@ -228,7 +226,7 @@ class Project
             $post->post_type . '_subject_meta_nonce'
         );
 
-        echo '<div>' . $choice_block . '</div>';
+        echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
     }
 
     /**
@@ -238,7 +236,7 @@ class Project
      *
      * @return void
      */
-    public function draw_project_period_box(\WP_Post $post): void
+    private function draw_project_period_box(\WP_Post $post): void
     {
         // Get the linked subject for this project post
         $linked_term = $this->get_project_term($post->ID);
@@ -277,7 +275,7 @@ class Project
             $post->post_type . '_period_meta_nonce'
         );
 
-        echo '<div>' . $choice_block . '</div>';
+        echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
     }
 
     /**
