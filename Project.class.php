@@ -173,9 +173,9 @@ class Project
     public function draw_meta_boxes(\WP_Post $post)
     {
         echo '<div style="display: flex;gap: 5%;">';
-        $this->draw_project_highlight_box($post);
         $this->draw_project_subjects_box($post);
         $this->draw_project_period_box($post);
+        $this->draw_project_highlight_box($post);
         echo '</div>';
     }
 
@@ -190,10 +190,17 @@ class Project
     {
         // Build dropdown select box in the WP meta box
         $checked = get_post_meta($post->ID, '_highlight', true) == "is-highlight" ? ' checked="checked"' : '';
+        $_hpt = has_post_thumbnail($post);
+        $disabled = $_hpt ? '' : ' disabled="disabled"';
         $choice_block = <<<HTML
-                        <label for="highlight">Projekt in den Highlights zeigen</label><br>
-                        <input type="checkbox" id="highlight" name="highlight" value="is-highlight" {$checked}>
+                        <label for="highlight">Projekt in den Highlights zeigen:</label><br>
+                        <input type="checkbox" id="highlight" name="highlight" value="is-highlight" {$checked} {$disabled}>
                         HTML;
+        if (!$_hpt) {
+            $choice_block .= <<<HTML
+                <small style="color:red;">Projekt kann nicht in den Highlights gezeigt werden, wenn kein Beitragsbild gesetzt ist.</small><br>
+                HTML;
+        }
 
         # Make sure the user intended to do this.
         wp_nonce_field(
@@ -388,7 +395,7 @@ class Project
             $do_save = false;
         }
 
-        foreach (['_subject', '_period'] as $subtype) {
+        foreach (['_subject', '_period', '_highlight'] as $subtype) {
             # Make sure the nonce and referrer check out.
             $nonce_field_name = $post->post_type . $subtype . '_meta_nonce';
             if (! array_key_exists($nonce_field_name, $_POST)) {
@@ -427,6 +434,9 @@ class Project
         if (array_key_exists('highlight', $data)) {
             /* Get the meta value of the custom field key. */
             $meta_value = get_post_meta($project_id, '_highlight', true);
+            /* Check if the post has a thumbnail and prevent or remove the highlight 
+            option if no image is present */
+            $_hpt = has_post_thumbnail($post) ? $meta_value : null;
             $new_meta_value = $data['highlight'] ?? 0;
             
             if ($new_meta_value && '' == $meta_value) {
