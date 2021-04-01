@@ -34,3 +34,21 @@ function get_all_of_post_type($type_name = ''): array
     }
     return $items;
 }
+
+/**
+ * Update the rewrite rules to find custom post type \Project
+ * when wp is routing to these resources
+ *
+ * @param   array   all currently set rewrite rules
+ *
+ * @return  array   current rules with new rules added
+ */
+function imm_rewrite_rules($rules) {
+    $newRules  = array();
+    // If the URL is '/projects/some-project' show the results of 'index.php?project=some-project'
+    $newRules['projects/(.+)/?$'] = 'index.php?project=$matches[1]';
+    
+    // Add to set of existing rules
+    return array_merge($newRules, $rules);
+}
+add_filter('rewrite_rules_array', 'imm_rewrite_rules');
