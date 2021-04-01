@@ -6,9 +6,8 @@
 /*
 Plugin Name: imm Portfolio
 Description: Portfolio-Plugin für die imm Website. Das Plugin liefert die Custom Post types <strong>Subject</strong> - Ein vom imm angebotenes Fach - <strong>Project</strong> - Ein in einem Fach durchgeführtes Projekt
-Version: 0.0.23
-Author: Tobias Lahmann
-Author URI: https://github.com/tlahmann
+Version: 0.0.24
+Author: <a href="https://github.com/tlahmann" target="_blank">Tobias Lahmann</a> and <a href="https://github.com/JuliusSchuerrle" target="_blank">Julius Schürrle</a>
 License: GPLv2 or later
 */
 
