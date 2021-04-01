@@ -52,3 +52,15 @@ function imm_rewrite_rules($rules) {
     return array_merge($newRules, $rules);
 }
 add_filter('rewrite_rules_array', 'imm_rewrite_rules');
+
+/**
+ * Remove the default post from the wordpress admin panel
+ *
+ * @return  void
+ */
+function post_remove (): void
+{ 
+   remove_menu_page('edit.php');
+}
+//adding action for triggering function call
+add_action('admin_menu', 'post_remove');   
