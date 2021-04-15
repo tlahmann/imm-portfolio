@@ -43,7 +43,8 @@ function get_all_of_post_type($type_name = ''): array
  *
  * @return  array   current rules with new rules added
  */
-function imm_rewrite_rules($rules) {
+function imm_rewrite_rules($rules)
+{
     $newRules  = array();
     // If the URL is '/projects/some-project' show the results of 'index.php?project=some-project'
     $newRules['projects/(.+)/?$'] = 'index.php?project=$matches[1]';
@@ -58,9 +59,19 @@ add_filter('rewrite_rules_array', 'imm_rewrite_rules');
  *
  * @return  void
  */
-function post_remove (): void
-{ 
-   remove_menu_page('edit.php');
+function post_remove(): void
+{
+    remove_menu_page('edit.php');
 }
 //adding action for triggering function call
-add_action('admin_menu', 'post_remove');   
+add_action('admin_menu', 'post_remove');
+
+/**
+ * Load media script with wp plugin
+ */
+add_action('admin_enqueue_scripts', 'imm_load_media_script');
+
+function imm_load_media_script()
+{
+    wp_enqueue_script('imm-media', plugin_dir_url(__FILE__) . './js/imm-media.js');
+}
