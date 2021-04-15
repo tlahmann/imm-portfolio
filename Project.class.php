@@ -19,6 +19,7 @@ class Project
     {
         add_action('init', array( $this, 'register_projects_categories' ));
         add_action('init', array( $this, 'register_projects_post_type' ));
+        add_action('init', array( $this, 'register_projects_sidebar' ));
         add_action('save_post', array( $this, 'save_meta_box_data' ), 10, 2);
         add_action('add_meta_boxes_project', array( $this, 'setup_project_boxes' ));
     }
@@ -147,6 +148,24 @@ class Project
                     'slug' => 'projects',   // This controls the base slug that will display before each term
                     'with_front' => false   // Don't display the category base before
                 )
+            )
+        );
+    }
+
+    /**
+     * Create projects sidebar
+     *
+     * @return void
+     */
+    public function register_projects_sidebar()
+    {
+        register_sidebar(
+            array(
+                'name' => __('Project Sidebar'),
+                'id' => 'sidebar-project',
+                'description' => 'An optional widget area for my sidebar',
+                'before_widget' => '<div id="%1$s">',
+                'after_widget' => "</div>"
             )
         );
     }
@@ -434,7 +453,7 @@ class Project
         if (array_key_exists('highlight', $data)) {
             /* Get the meta value of the custom field key. */
             $meta_value = get_post_meta($project_id, '_highlight', true);
-            /* Check if the post has a thumbnail and prevent or remove the highlight 
+            /* Check if the post has a thumbnail and prevent or remove the highlight
             option if no image is present */
             $_hpt = has_post_thumbnail($post) ? $meta_value : null;
             $new_meta_value = $data['highlight'] ?? 0;
