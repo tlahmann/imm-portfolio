@@ -73,5 +73,7 @@ add_action('admin_enqueue_scripts', 'imm_load_media_script');
 
 function imm_load_media_script()
 {
+    wp_register_style( 'imm-media', plugin_dir_url(__FILE__) . './css/imm.css' );
+    wp_enqueue_style( 'imm-media' );
     wp_enqueue_script('imm-media', plugin_dir_url(__FILE__) . './js/imm-media.js');
 }
