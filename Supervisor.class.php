@@ -130,6 +130,11 @@ class Supervisor
      */
     public function check_supervisor_featured_image($data, $post_data) :array
     {
+        /* Check against the current post object */
+        if (empty($post_data) || 'supervisor' !== $post_data['post_type']) {
+            return $data;
+        }
+
         $post_id              = $post_data['ID'];
         $post_status          = $data['post_status'];
         $original_post_status = array_key_exists('original_post_status', $post_data) ? $post_data['original_post_status'] : '';

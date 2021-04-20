@@ -130,6 +130,11 @@ class Impression
      */
     public function check_impression_featured_image($data, $post_data) :array
     {
+        /* Check against the current post object */
+        if (empty($post_data) || 'impression' !== $post_data['post_type']) {
+            return $data;
+        }
+        
         $post_id              = $post_data['ID'];
         $post_status          = $data['post_status'];
         $original_post_status = array_key_exists('original_post_status', $post_data) ? $post_data['original_post_status'] : '';
@@ -155,7 +160,7 @@ class Impression
         if (!isset($post) || $post->post_type !== 'impression') {
             return;
         }
-        if ('publish' !== get_post_status($post->ID) && ! has_post_thumbnail($post->ID)) { 
+        if ('publish' !== get_post_status($post->ID) && ! has_post_thumbnail($post->ID)) {
             $message = __('Please set a Featured Image. This post cannot be published without one.');
             echo <<<HTML
                  <div id="message" class="error">
