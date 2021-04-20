@@ -202,7 +202,7 @@ class Project
     {
         echo '<div style="display: flex;gap: 5%;">';
         $this->draw_project_subjects_box($post);
-        $this->draw_project_period_box($post);
+        $this->draw_project_term_box($post);
         $this->draw_project_highlight_box($post);
         echo '</div>';
     }
@@ -298,7 +298,7 @@ class Project
      *
      * @return void
      */
-    private function draw_project_period_box(\WP_Post $post): void
+    private function draw_project_term_box(\WP_Post $post): void
     {
         // Get the linked subject for this project post
         $linked_term = $this->get_project_term($post->ID);
