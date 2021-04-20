@@ -181,7 +181,7 @@ class Project
     {
         add_meta_box(
             'imm_project_related_subject_box',
-            __('Projekt Metadaten', 'language'),
+            'Projekt Metadaten',
             array( $this, 'draw_meta_boxes' ),
             $post->post_type,
             'normal',
@@ -190,7 +190,7 @@ class Project
         
         add_meta_box(
             'imm_project_related_attachment_box',
-            __('Images attached to post ', 'domain'),
+            'Projektmedien',
             array( $this, 'draw_attachments_boxes' ),
             $post->post_type,
             'normal',
@@ -342,37 +342,41 @@ class Project
 
     public function draw_attachments_boxes(\WP_Post $post)
     {
-        $arguments = array(
-          'numberposts' => - 1,
-          'post_type' => 'attachment',
-          'post_mime_type' => 'image',
-          'post_parent' => $post->ID,
-          'post_status' => null,
-          'exclude' => get_post_thumbnail_id() ,
-          'orderby' => 'menu_order',
-          'order' => 'ASC'
-        );
-        $post_attachments = get_posts($arguments);
-        foreach ($post_attachments as $attachment) {
-            $preview = wp_get_attachment_image_src(
-                $attachment->ID,
-                'wpestate_slider_thumb'
-            );
-            echo '<img src="' . $preview[0] . '">';
-        }
         /**
          * The button that opens our media uploader
          * The `data-media-uploader-target` value should match the ID/unique selector of your field.
          * We'll use this value to dynamically inject the file URL of our uploaded media asset into your field once successful (in the imm-media.js file)
-         */ 
-		$saved = get_post_meta( $post->ID, 'imm_project_media_id', true );
+         */
+        $media_set = get_post_meta($post->ID, '_media_ids', true);
+        $media_set = explode(',', $media_set);
+        $media_string = '';
+        if (0 == count($media_set)) {
+            // noop
+        } else {
+            $media_array = array();
+            foreach ($media_set as $media) {
+                $post_attachments = get_post($media);
+
+                // Add all available medias to the select DOM element
+                $image = wp_get_attachment_image($post_attachments->ID);
+                $display_name = esc_attr($post_attachments->post_title);
+                $media_array[] = <<<HTML
+                                    <figure>
+                                        {$image}
+                                        <figcaption class="overlay">{$display_name}</figcaption>
+                                    </figure>
+                                 HTML;
+            }
+            $media_string .= implode("\r\n", $media_array);
+        }
+
         $choice_block = <<<HTML
                         <fieldset>
-                            <div>
-                                <label for="imm_project_media">Label</label><br>
-                                <input type="url" class="large-text" name="imm_project_media" id="imm_project_media" value="esc_attr( $saved )"><br>
-                                <button type="button" class="button" id="events_video_upload_btn" data-media-uploader-target="#imm_project_media">Medien hinzufügen</button>
+                            <div id="imm_project_media_images">
+                                {$media_string}
                             </div>
+                            <input type="hidden" class="large-text" name="imm_project_media" id="imm_project_media" multiple><br>
+                            <button type="button" class="button" id="events_video_upload_btn" data-media-uploader-target="#imm_project_media">Medien auswählen</button>
                         </fieldset>
                         HTML;
         echo $choice_block;
@@ -541,6 +545,12 @@ class Project
             } else {
                 delete_post_meta($project_id, '_term');
             }
+        }
+
+        if (array_key_exists('imm_project_media', $data) && $data['imm_project_media'] !== '') {
+            $media = $data['imm_project_media'];
+
+            update_post_meta($project_id, '_media_ids', $media);
         }
     }
 }
