@@ -524,7 +524,7 @@ class Project
 
         # Get the list of subjects checked by the user
         if (array_key_exists('subject_id', $data) && $data['subject_id'] !== 0) {
-            $subject_id = $data['subject_id'] ?? 0;
+            $subject_id = intval($data['subject_id']) ?? 0;
             
             if ($subject_id !== 0) {
                 # We use add post meta with 4th parameter true to let us link
@@ -536,7 +536,7 @@ class Project
         }
 
         if (array_key_exists('term', $data) && $data['term'] !== 0) {
-            $term = $data['term'] ?? 0;
+            $term = intval($data['term']) ?? 0;
             
             if ($term !== 0) {
                 # We use add post meta with 4th parameter true to let us link
