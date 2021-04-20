@@ -348,10 +348,10 @@ class Project
          * We'll use this value to dynamically inject the file URL of our uploaded media asset into your field once successful (in the imm-media.js file)
          */
         $media_set = get_post_meta($post->ID, '_media_ids', true);
-        $media_set = explode(',', $media_set);
+        $media_set = $media_set !== "" ? explode(',', $media_set) : [];
         $media_string = '';
         if (0 == count($media_set)) {
-            // noop
+            _e('Keine Projektmedien hinzugefügt');
         } else {
             $media_array = array();
             foreach ($media_set as $media) {
