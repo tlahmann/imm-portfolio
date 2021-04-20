@@ -142,7 +142,7 @@ class Project
             'projects',                     // post type name
             array(
                 'hierarchical' => false,     // The keywords are hierarchical at the moment
-                'label' => 'Schlagworte',   // Label Displayed in the Admin when creating a new project
+                'label' => 'Tech. Facts',   // Label Displayed in the Admin when creating a new project
                 'query_var' => true,
                 'rewrite' => array(
                     'slug' => 'projects',   // This controls the base slug that will display before each term
