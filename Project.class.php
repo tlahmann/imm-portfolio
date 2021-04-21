@@ -202,6 +202,7 @@ class Project
     {
         echo '<div style="display: flex;gap: 5%;">';
         $this->draw_project_subjects_box($post);
+        $this->draw_project_supervisor_box($post);
         $this->draw_project_term_box($post);
         $this->draw_project_highlight_box($post);
         echo '</div>';
@@ -286,6 +287,58 @@ class Project
         wp_nonce_field(
             "updating_{$post->post_type}_meta_fields",
             $post->post_type . '_subject_meta_nonce'
+        );
+
+        echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
+    }
+
+    /**
+     * Echoes the subject select DOM element for wordpress to show in the meta box
+     *
+     * @param \WP_Post     $post       The current CPT \Project post
+     *
+     * @return void
+     */
+    private function draw_project_supervisor_box(\WP_Post $post): void
+    {
+        // All available posts of type 'supervisor' @see \supervisor.class.php
+        $all_supervisors = get_all_of_post_type('supervisor');
+
+        // Get the linked supervisor for this project post
+        $linked_supervisor_id = $this->get_project_supervisor_id($post->ID);
+
+        // Build dropdown select box in the WP meta box
+        $checked = $linked_supervisor_id == "0" ? ' selected="selected"' : '';
+        $choice_block = <<<HTML
+                        <label for="supervisor_id">Betreuer:</label><br/>
+                        <select name="supervisor_id" id="supervisor_id" style="width: 100%;">
+                            <option value="null" {$checked}>Kein Betreuer</option>
+                        HTML;
+        if (0 == count($all_supervisors)) {
+            // noop
+        } else {
+            $choices = array();
+            foreach ($all_supervisors as $supervisor) {
+                $checked = $supervisor->ID == $linked_supervisor_id ? ' selected="selected"' : '';
+
+                // Add all available supervisors to the select DOM element
+                $display_name = esc_attr($supervisor->post_title);
+                $choices[] = <<<HTML
+                             <option value="{$supervisor->ID}" {$checked}>{$display_name}</option>
+                             HTML;
+            }
+            $choice_block .= implode("\r\n", $choices);
+        }
+
+        // Close select section
+        $choice_block .= <<<HTML
+                         </select>
+                         HTML;
+
+        # Make sure the user intended to do this.
+        wp_nonce_field(
+            "updating_{$post->post_type}_meta_fields",
+            $post->post_type . '_supervisor_meta_nonce'
         );
 
         echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
@@ -394,6 +447,25 @@ class Project
         $ids = "0";
         if ($project_id > 0) {
             $matches = get_post_meta($project_id, '_subject_id', false);
+            if (count($matches) > 0) {
+                $ids = $matches[0];
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Grab the supervisor ID associated with this project
+     *
+     * @param   number      $project_id     The current CPT \Project post id
+     *
+     * @return  string                      The assigned CPT \supervisor post id
+     */
+    private function get_project_supervisor_id($project_id = 0): string
+    {
+        $ids = "0";
+        if ($project_id > 0) {
+            $matches = get_post_meta($project_id, '_supervisor_id', false);
             if (count($matches) > 0) {
                 $ids = $matches[0];
             }
@@ -532,6 +604,19 @@ class Project
                 update_post_meta($project_id, '_subject_id', $subject_id);
             } else {
                 delete_post_meta($project_id, '_subject_id');
+            }
+        }
+
+        # Get the list of supervisors checked by the user
+        if (array_key_exists('supervisor_id', $data) && $data['supervisor_id'] !== 0) {
+            $supervisor_id = intval($data['supervisor_id']) ?? 0;
+            
+            if ($supervisor_id !== 0) {
+                # We use add post meta with 4th parameter true to let us link
+                # to one unique supervisor.
+                update_post_meta($project_id, '_supervisor_id', $supervisor_id);
+            } else {
+                delete_post_meta($project_id, '_supervisor_id');
             }
         }
 
