@@ -204,6 +204,7 @@ class Project
         $this->draw_project_subjects_box($post);
         $this->draw_project_supervisor_box($post);
         $this->draw_project_term_box($post);
+        $this->draw_project_students_box($post);
         $this->draw_project_highlight_box($post);
         echo '</div>';
     }
@@ -258,7 +259,7 @@ class Project
         // Build dropdown select box in the WP meta box
         $checked = $linked_subject_id == "0" ? ' selected="selected"' : '';
         $choice_block = <<<HTML
-                        <label for="subject_id">Zugeordnetes Fach:</label><br/>
+                        <label for="subject_id">Zugeordnetes Fach:</label>
                         <select name="subject_id" id="subject_id" style="width: 100%;">
                             <option value="null" {$checked}>Kein Fach</option>
                         HTML;
@@ -310,7 +311,7 @@ class Project
         // Build dropdown select box in the WP meta box
         $checked = $linked_supervisor_id == "0" ? ' selected="selected"' : '';
         $choice_block = <<<HTML
-                        <label for="supervisor_id">Betreuer:</label><br/>
+                        <label for="supervisor_id">Betreuer:</label>
                         <select name="supervisor_id" id="supervisor_id" style="width: 100%;">
                             <option value="null" {$checked}>Kein Betreuer</option>
                         HTML;
@@ -360,7 +361,7 @@ class Project
         // Build dropdown select box in the WP meta box
         $checked = $linked_term == "0" ? ' selected="selected"' : '';
         $choice_block = <<<HTML
-                        <label for="term">Projektzeit:</label><br/>
+                        <label for="term">Projektzeit:</label>
                         <select name="term" id="term" style="width: 100%;">
                             <option value="null" {$checked}>Kein Semester</option>
                         HTML;
@@ -391,6 +392,33 @@ class Project
         );
 
         echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $choice_block . '</div>';
+    }
+
+    /**
+     * Echoes the students select DOM element for wordpress to show in the meta box
+     *
+     * @param \WP_Post     $post       The current CPT \Project post
+     *
+     * @return void
+     */
+    private function draw_project_students_box(\WP_Post $post): void
+    {
+        // Get the linked subject for this project post
+        $students = get_post_meta($post->ID, '_students', true);
+
+        // Build dropdown select box in the WP meta box
+        $students_block = <<<HTML
+                        <label for="students">Studenten:</label>
+                        <input type="text" id="students" name="students" value="{$students}"/>
+                        HTML;
+
+        # Make sure the user intended to do this.
+        wp_nonce_field(
+            "updating_{$post->post_type}_meta_fields",
+            $post->post_type . '_students_meta_nonce'
+        );
+
+        echo '<div style="display: flex;flex: 1 1 100%;flex-direction: column;">' . $students_block . '</div>';
     }
 
     public function draw_attachments_boxes(\WP_Post $post)
@@ -629,6 +657,18 @@ class Project
                 update_post_meta($project_id, '_term', $term);
             } else {
                 delete_post_meta($project_id, '_term');
+            }
+        }
+
+        if (array_key_exists('students', $data)) {
+            $students = $data['students'];
+            
+            if ($students !== '') {
+                # We use add post meta with 4th parameter true to let us link
+                # to one unique subject.
+                update_post_meta($project_id, '_students', $students);
+            } else {
+                delete_post_meta($project_id, '_students');
             }
         }
 
