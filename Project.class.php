@@ -620,10 +620,10 @@ class Project
             }
         }
 
-        if (array_key_exists('term', $data) && $data['term'] !== 0) {
-            $term = intval($data['term']) ?? 0;
+        if (array_key_exists('term', $data)) {
+            $term = $data['term'];
             
-            if ($term !== 0) {
+            if (intval($term) !== 0) {
                 # We use add post meta with 4th parameter true to let us link
                 # to one unique subject.
                 update_post_meta($project_id, '_term', $term);
